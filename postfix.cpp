@@ -38,6 +38,12 @@ main() {
             case Lexer::TokenType::TOK_RIGHT_CURLY_BRACKET:
                 std::cout << "} -> " << t.m_value.str() << std::endl;
                 break;
+            case Lexer::TokenType::TOK_LIT_NUMBER:
+                std::cout << "number: -> " << t.m_value.str() << std::endl;
+                break;
+            case Lexer::TokenType::TOK_LIT_STRING:
+                std::cout << "string: -> " << t.m_value.str() << std::endl;
+                break;
             case Lexer::TokenType::TOK_EOF:
                 return 0;
             default:

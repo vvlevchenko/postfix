@@ -18,6 +18,8 @@ namespace lexer {
             TOK_RIGHT_BRACKET,
             TOK_LEFT_CURLY_BRACKET,
             TOK_RIGHT_CURLY_BRACKET,
+            TOK_LIT_NUMBER,
+            TOK_LIT_STRING,
             TOK_EOL
         };
 
@@ -45,6 +47,10 @@ namespace lexer {
         Lexer::TokenType DoIdentifier();
 
         Lexer::TokenType DoStringLiteral();
+
+        TokenType GetKeyword(size_t size);
+
+        bool IsDigit();
     };
 }
 

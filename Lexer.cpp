@@ -3,13 +3,13 @@
 
 using namespace lexer;
 
-static const std::map<char, lexer::Lexer::TokenType> tokens = {
-        {'(', Lexer::TokenType::TOK_LEFT_PARENTHESIS},
-        {')', Lexer::TokenType::TOK_RIGHT_PARENTHESIS},
-        {'[', Lexer::TokenType::TOK_LEFT_BRACKET},
-        {']', Lexer::TokenType::TOK_RIGHT_BRACKET},
-        {'{', Lexer::TokenType::TOK_LEFT_CURLY_BRACKET},
-        {'}', Lexer::TokenType::TOK_RIGHT_CURLY_BRACKET},
+static const std::map<llvm::StringRef, lexer::Lexer::TokenType> tokens = {
+        {llvm::StringRef("("), Lexer::TokenType::TOK_LEFT_PARENTHESIS},
+        {llvm::StringRef(")"), Lexer::TokenType::TOK_RIGHT_PARENTHESIS},
+        {llvm::StringRef("["), Lexer::TokenType::TOK_LEFT_BRACKET},
+        {llvm::StringRef("]"), Lexer::TokenType::TOK_RIGHT_BRACKET},
+        {llvm::StringRef("{"), Lexer::TokenType::TOK_LEFT_CURLY_BRACKET},
+        {llvm::StringRef("}"), Lexer::TokenType::TOK_RIGHT_CURLY_BRACKET},
 };
 
 const Lexer::Token& Lexer::Lex() {
@@ -71,16 +71,23 @@ Lexer::TokenType Lexer::InternalLex() {
 }
 
 Lexer::TokenType Lexer::DoOperator() {
-    std::map<char, lexer::Lexer::TokenType>::const_iterator it = tokens.find(*m_start);
+    return GetKeyword(1);
+}
+
+Lexer::TokenType Lexer::GetKeyword(size_t size) {
+    auto it = tokens.find(llvm::StringRef(m_start, size));
     if (it != tokens.end()) {
-        m_start++;
+        m_start += size;
         return it->second;
     }
     return TOK_INVALID;
 }
 
 Lexer::TokenType Lexer::DoNumberLiteral() {
-    return TOK_INVALID;
+    while(IsDigit() || m_start == m_end) {
+        m_start++;
+    }
+    return TOK_LIT_NUMBER;
 }
 
 Lexer::TokenType Lexer::DoIdentifier() {
@@ -88,5 +95,19 @@ Lexer::TokenType Lexer::DoIdentifier() {
 }
 
 Lexer::TokenType Lexer::DoStringLiteral() {
-    return TOK_EOL;
+    m_start++;
+    while (*m_start != '\"') {
+        if (m_start == m_end)
+            return TOK_INVALID;
+        m_start++;
+    }
+    m_start++;
+    return TOK_LIT_STRING;
+}
+
+bool Lexer::IsDigit() {
+    switch(*m_start) {
+        case '0'...'9': return true;
+    }
+    return false;
 }
