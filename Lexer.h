@@ -20,6 +20,14 @@ namespace lexer {
             TOK_RIGHT_CURLY_BRACKET,
             TOK_LIT_NUMBER,
             TOK_LIT_STRING,
+            TOK_LIT_BOOL_TRUE,
+            TOK_LIT_BOOL_FALSE,
+            TOK_IDENTIFIER,
+            TOK_OP_PLUS,
+            TOK_OP_MINUS,
+            TOK_OP_DIV,
+            TOK_OP_MUL,
+            TOK_OP_MOD,
             TOK_EOL
         };
 
@@ -48,9 +56,11 @@ namespace lexer {
 
         Lexer::TokenType DoStringLiteral();
 
-        TokenType GetKeyword(size_t size);
+        Lexer::TokenType GetKeyword(const char *start, size_t size);
 
-        bool IsDigit();
+        bool IsEnd() const;
+
+        bool IsLexem() const;
     };
 }
 

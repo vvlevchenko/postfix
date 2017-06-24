@@ -1,5 +1,6 @@
 #include "Lexer.h"
 #include <map>
+#include <iostream>
 
 using namespace lexer;
 
@@ -10,6 +11,14 @@ static const std::map<llvm::StringRef, lexer::Lexer::TokenType> tokens = {
         {llvm::StringRef("]"), Lexer::TokenType::TOK_RIGHT_BRACKET},
         {llvm::StringRef("{"), Lexer::TokenType::TOK_LEFT_CURLY_BRACKET},
         {llvm::StringRef("}"), Lexer::TokenType::TOK_RIGHT_CURLY_BRACKET},
+        {llvm::StringRef("+"), Lexer::TokenType::TOK_OP_PLUS},
+        {llvm::StringRef("-"), Lexer::TokenType::TOK_OP_MINUS},
+        {llvm::StringRef("*"), Lexer::TokenType::TOK_OP_MUL},
+        {llvm::StringRef("/"), Lexer::TokenType::TOK_OP_DIV},
+        {llvm::StringRef("%"), Lexer::TokenType::TOK_OP_MOD},
+        {llvm::StringRef("\n"), Lexer::TokenType::TOK_EOL},
+        {llvm::StringRef("true"), Lexer::TokenType::TOK_LIT_BOOL_TRUE},
+        {llvm::StringRef("false"), Lexer::TokenType::TOK_LIT_BOOL_FALSE},
 };
 
 const Lexer::Token& Lexer::Lex() {
@@ -21,7 +30,7 @@ const Lexer::Token& Lexer::Lex() {
 }
 
 void Lexer::SkipWhiteSpace() {
-    while(*m_start == ' ' || *m_start == '\t')
+    while(std::isblank(*m_start))
         m_start++;
 }
 
@@ -71,33 +80,43 @@ Lexer::TokenType Lexer::InternalLex() {
 }
 
 Lexer::TokenType Lexer::DoOperator() {
-    return GetKeyword(1);
+    const char *start = m_start;
+    m_start++;
+    return GetKeyword(start, 1);
 }
 
-Lexer::TokenType Lexer::GetKeyword(size_t size) {
-    auto it = tokens.find(llvm::StringRef(m_start, size));
+Lexer::TokenType Lexer::GetKeyword(const char *start, size_t size) {
+    auto it = tokens.find(llvm::StringRef(start, size));
     if (it != tokens.end()) {
-        m_start += size;
         return it->second;
     }
     return TOK_INVALID;
 }
 
 Lexer::TokenType Lexer::DoNumberLiteral() {
-    while(IsDigit() || m_start == m_end) {
+    while(isdigit(*m_start) && !IsEnd()) {
         m_start++;
     }
     return TOK_LIT_NUMBER;
 }
 
+bool Lexer::IsEnd() const { return m_start == m_end; }
+
 Lexer::TokenType Lexer::DoIdentifier() {
-    return TOK_INVALID;
+    const char *start = m_start;
+    while (IsLexem()) m_start++;
+    auto token = GetKeyword(start, m_start - start);
+    if (token == TOK_INVALID)
+        return TOK_IDENTIFIER;
+    return token;
 }
+
+bool Lexer::IsLexem() const { return !IsEnd() && (isalnum(*m_start) || *m_start == '_'); }
 
 Lexer::TokenType Lexer::DoStringLiteral() {
     m_start++;
     while (*m_start != '\"') {
-        if (m_start == m_end)
+        if (IsEnd())
             return TOK_INVALID;
         m_start++;
     }
@@ -105,9 +124,3 @@ Lexer::TokenType Lexer::DoStringLiteral() {
     return TOK_LIT_STRING;
 }
 
-bool Lexer::IsDigit() {
-    switch(*m_start) {
-        case '0'...'9': return true;
-    }
-    return false;
-}

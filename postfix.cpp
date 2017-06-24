@@ -6,13 +6,14 @@ using lexer::Lexer;
 
 int
 main() {
-    char c[1024];
-    std::string text;
+
+    std::string text, line;
     llvm::raw_string_ostream ostream(text);
-    while (std::cin >> c) {
-        std::cout << ">>" << c;
-        ostream << c;
-    }
+    while (std::getline(std::cin, line))
+        ostream << line << '\n';
+
+    std::cout << std::endl;
+    std::cout << "in: '" << ostream.str() << "'" << std::endl;
     Lexer lex((char *) ostream.str().c_str());
     while(true) {
         const Lexer::Token& t = lex.Lex();
@@ -44,10 +45,19 @@ main() {
             case Lexer::TokenType::TOK_LIT_STRING:
                 std::cout << "string: -> " << t.m_value.str() << std::endl;
                 break;
+            case Lexer::TokenType::TOK_LIT_BOOL_FALSE:
+                std::cout << "bool: -> " << t.m_value.str() << std::endl;
+                break;
+            case Lexer::TokenType::TOK_LIT_BOOL_TRUE:
+                std::cout << "bool: -> " << t.m_value.str() << std::endl;
+                break;
+            case Lexer::TokenType::TOK_IDENTIFIER:
+                std::cout << "identifier: -> " << t.m_value.str() << std::endl;
+                break;
             case Lexer::TokenType::TOK_EOF:
                 return 0;
             default:
-                std::cout << "Unknown token: " << t.m_value.str() << std::endl;
+                std::cout << "Unknown token: "<< std::to_string(t.m_type) << t.m_value.str() << std::endl;
                 return 1;
 
         }
